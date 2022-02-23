@@ -19,14 +19,14 @@ namespace log {
             // 旧的block全写0
             int block_remain = kBlockSize - block_offset_;
             if (block_remain < kHeaderSize) {
-                if(block_remain>0) {
-                    dest_->Append(Slice("\x00\x00\x00\x00\x00\x00\x00",block_remain));
-                }
-                block_offset_ = 0;
-                block_remain = kBlockSize;
+              if(block_remain>0) {
+                dest_->Append(Slice("\x00\x00\x00\x00\x00\x00\x00",block_remain));
+              }
+              block_offset_ = 0;
+              block_remain = kBlockSize;
             }
 
-						int fragment_length = (left>block_remain)?block_remain:left;
+			      int fragment_length = (left>block_remain)?block_remain:left;
             left -= fragment_length;
             RecordType type;
             bool end = (left == 0);
@@ -41,7 +41,7 @@ namespace log {
             }
 
           s = EmitPhysicalRecord(type,ptr,fragment_length);
-					begin = false;
+		      begin = false;
 					block_offset_ += fragment_length;
 					ptr += fragment_length;
         } while(s.ok() && left>0);

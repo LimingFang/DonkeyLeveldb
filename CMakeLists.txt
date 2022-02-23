@@ -37,3 +37,4 @@ function(leveldb_test test_file)
   add_test(NAME "${test_target_name}" COMMAND "${test_target_name}")
 endfunction(leveldb_test)  
 
+leveldb_test("db/log_writer_test.cpp")
