@@ -1,12 +1,16 @@
 #include "leveldb/env.h"
-#include "leveldb/status.h"
-#include <unistd.h>
+
 #include <fcntl.h>
+#include <unistd.h>
+
+#include "leveldb/status.h"
 
 namespace leveldb {
+WritableFile::~WritableFile() = default;
 namespace {
 constexpr const size_t kWritableFileBufferSize = 65536;
 constexpr const int kOpenBaseFlags = O_CLOEXEC;
+
 Status PosixError(const std::string& context, int error_number) {
   if (error_number == ENOENT) {
     return Status::NotFound(context, std::strerror(error_number));
@@ -203,5 +207,5 @@ class PosixWritableFile final : public WritableFile {
   const std::string filename_;
   const std::string dirname_;  // The directory of filename_.
 };
-}
-};
+}  // namespace
+};  // namespace leveldb

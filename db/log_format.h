@@ -1,24 +1,24 @@
 #pragma once
-
+#include <cstdint>
 namespace leveldb {
 
 namespace log {
-    // 定义了字段类型、以及record类型
-    enum RecordType {
-        kZeroType = 0,
-        
-        kFullType = 2,
+// 定义了字段类型、以及record类型
+enum RecordType : uint8_t {
+  kZeroType = 0,
 
-        kFirstType = 4,
+  kFullType = 2,
 
-        kMidType = 6,
+  kFirstType = 4,
 
-        kLastType = 8,
-    };
+  kMidType = 6,
 
-    static const int kBlockSize = 32 << 10;
-
-    static const int kHeaderSize = 4 + 2 + 1;
+  kLastType = 8,
 };
 
-}
+static const int kBlockSize = 32 << 10;
+
+static const int kHeaderSize = 4 + 2 + 1;
+};  // namespace log
+
+}  // namespace leveldb

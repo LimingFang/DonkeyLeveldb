@@ -1,36 +1,31 @@
 #pragma once
 
+#include <cstdint>
+
 #include "leveldb/slice.h"
 #include "leveldb/status.h"
 #include "log_format.h"
-#include <cstdint>
 
 namespace leveldb {
 
-class WritableFile;    
+class WritableFile;
 namespace log {
-  // 需要写一个LogWriter,利用了WritableFile.
-  class LogWriter {
-    public:
-      explicit LogWriter(WritableFile* dest);
+// 需要写一个LogWriter,利用了WritableFile.
+class LogWriter {
+ public:
+  explicit LogWriter(WritableFile* dest);
+  LogWriter(const LogWriter&) = delete;
 
-      LogWriter(WritableFile* dest,uint64_t dest_length);
+  LogWriter& operator=(const LogWriter&) = delete;
+  Status AddRecord(const Slice* slice);
 
-      LogWriter(const LogWriter&) = delete;
+ private:
+  Status EmitPhysicalRecord(RecordType type, const char* ptr, int length);
 
-      LogWriter& operator=(const LogWriter&) = delete;
+  WritableFile* dest_;
 
-      ~LogWriter();
+  int block_offset_;
+};
+};  // namespace log
 
-    Status AddRecord(const Slice* slice);
-
-    private:
-      Status EmitPhysicalRecord(RecordType type,const char* ptr,int length);
-
-      WritableFile* dest_;
-
-      int block_offset_;
-  };
-};    
-
-}
+}  // namespace leveldb

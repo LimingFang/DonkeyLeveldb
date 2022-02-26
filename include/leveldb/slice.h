@@ -95,4 +95,3 @@ inline int Slice::compare(const Slice& b) const {
 }
 
 }  // namespace leveldb
-

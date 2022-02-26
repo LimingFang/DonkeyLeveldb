@@ -18,4 +18,4 @@ class WritableFile {
   virtual Status Sync() = 0;
 };
 
-}
+}  // namespace leveldb
