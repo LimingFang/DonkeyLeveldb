@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22.0)
+cmake_minimum_required(VERSION 3.20.0)
 project(donkeyleveldb LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -13,13 +13,16 @@ include_directories(
 
 add_library(donkeyleveldb "")
 target_sources(donkeyleveldb 
-  PRIVATE
-  "db/log_writer.cpp"
-  "util/env.cpp"
-  PUBLIC
-  "${LEVELDB_PUBLIC_INCLUDE_DIR}/env.h"
-  "${LEVELDB_PUBLIC_INCLUDE_DIR}/slice.h"
-  "${LEVELDB_PUBLIC_INCLUDE_DIR}/status.h"
+    PRIVATE
+    "db/log_writer.cpp"
+    "db/db_impl.h"
+    "db/db_impl.cpp"
+    "util/env.cpp"
+    PUBLIC
+    "${LEVELDB_PUBLIC_INCLUDE_DIR}/env.h"
+    "${LEVELDB_PUBLIC_INCLUDE_DIR}/slice.h"
+    "${LEVELDB_PUBLIC_INCLUDE_DIR}/status.h"
+    "${LEVELDB_PUBLIC_INCLUDE_DIR}/db.h"
 )
 
 # ctest
