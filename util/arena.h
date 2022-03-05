@@ -17,6 +17,9 @@ class Arena {
   Arena& operator=(const Arena&) = delete;
 
   char* Allocate(size_t bytes);
+  size_t MemoryUsage() const {
+    return memory_usage_.load(std::memory_order_relaxed);
+  }
 
  private:
   char* AllocateFallback(size_t bytes);
