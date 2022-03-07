@@ -15,7 +15,6 @@ add_library(donkeyleveldb "")
 target_sources(donkeyleveldb
         PRIVATE
         "db/skiplist.h"
-        "db/skiplist.cpp"
         "db/memtable.h"
         "db/memtable.cpp"
         "db/db_format.h"

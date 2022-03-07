@@ -5,9 +5,8 @@
 
 #include <vector>
 
-#include "util/random.h"
-
 #include "gtest/gtest.h"
+#include "util/random.h"
 
 namespace leveldb {
 // 对于简单的类直接集成测试
