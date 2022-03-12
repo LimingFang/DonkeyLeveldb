@@ -10,8 +10,9 @@ namespace leveldb {
 class Comparator {
  public:
   Comparator() = default;
+  virtual ~Comparator() = 0;
 
-  virtual bool Compare(const Slice& l, const Slice& r) = 0;
+  virtual int Compare(const Slice& l, const Slice& r) = 0;
 
   virtual const char* Name() = 0;
 };

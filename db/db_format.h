@@ -21,9 +21,13 @@ class LookupKey {};
 
 class InternalKeyComparator : public Comparator {
  public:
-  InternalKeyComparator() = default;
-  bool Compare(const Slice& l, const Slice& r) override;
+  explicit InternalKeyComparator(Comparator* c);
+  ~InternalKeyComparator() override = default;
+  int Compare(const Slice& l, const Slice& r) override;
   const char* Name() override;
+
+ private:
+  Comparator* user_key_comparator_;
 };
 }  // namespace leveldb
 
