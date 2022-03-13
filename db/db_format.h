@@ -16,8 +16,31 @@ enum ValueType {
   kTypeDeletion = 0x0,
   kTypeValue = 0x1,
 };
+//
+const ValueType kTypeForSeek = kTypeValue;
 
-class LookupKey {};
+// 给定 user_key 和 seq_num，去 memtable 中查询
+// 对应的 record。
+class LookupKey {
+ public:
+  LookupKey(const Slice& user_key, SequenceNumberType seq_num);
+
+  Slice memtable_key();
+
+  Slice internal_key();
+
+  Slice user_key();
+
+ private:
+  // key_lengh 第一个字节
+  char* start_;
+  // key 第一个字节
+  char* kstart_;
+  // tag 最后一个字节
+  char* end_;
+
+  char space_[200];
+};
 
 class InternalKeyComparator : public Comparator {
  public:
