@@ -6,10 +6,12 @@
 #define DONKEYLEVELDB_DB_SKIPLIST_H_
 
 #include "leveldb/slice.h"
+
 #include "util/arena.h"
+#include "util/random.h"
 
 namespace leveldb {
-template <typename Key, class Comparator>
+template <class Comparator>
 class SkipList {
  private:
   struct Node;
@@ -18,18 +20,44 @@ class SkipList {
   // 一些规定:高度值[1,kMaxHeight]
   SkipList(Comparator* comparator, Arena* arena);
 
-  void Insert(const Key& key);
+  void Insert(const char* key);
 
-  bool Contains(const Key& key);
+  bool Contains(const char* key);
+
+  class Iterator {
+   public:
+    explicit Iterator(SkipList* skip_list)
+        : current_node_(skip_list->header_), list_(skip_list){};
+
+    bool Valid() const;
+
+    void Next();
+
+    Slice Value() const;
+
+    void SeekToLast();
+
+    void SeekToFirst();
+
+    // 定位到第一个entry(entry.key >= key).
+    void SeekTo(const char* key);
+
+   private:
+    Node* current_node_;
+    SkipList* list_;
+  };
 
  private:
   int GetRandomHeight();
 
-  Node* FindGreaterOrEqual(const Key& key, Node** prev);
+  Node* FindGreaterOrEqual(const char* key, Node** prev);
 
-  Node* NewNode(int level);
+  Node* NewNode(int height);
 
-  bool KeyIsAfterNode(const Key& key, Node* node);
+  // 返回最后一个节点，若为空则返回 header_
+  Node* FindLast() const;
+
+  bool KeyIsAfterNode(const char* key, Node* node);
 
   Arena* arena_;
   Comparator* comparator_;
@@ -38,27 +66,61 @@ class SkipList {
   static const int kMaxHeight = 12;
 };
 
-template <typename Key, class Comparator>
-struct SkipList<Key, Comparator>::Node {
-  explicit Node(const Key& key) : key(key){};
-  void SetNext(int level, Node* node) { next[level - 1] = node; }
-  Node* Next(int level) { return next[level - 1]; }
+template <class Comparator>
+bool SkipList<Comparator>::Iterator::Valid() const {
+  return current_node_ != nullptr;
+}
 
-  Key key;
+template <class Comparator>
+void SkipList<Comparator>::Iterator::Next() {
+  assert(current_node_ != nullptr);
+  current_node_ = current_node_->Next(0);
+}
+
+template <class Comparator>
+Slice SkipList<Comparator>::Iterator::Value() const {
+  assert(current_node_ != nullptr);
+  return Slice(current_node_->key);
+}
+
+template <class Comparator>
+void SkipList<Comparator>::Iterator::SeekToLast() {
+  current_node_ = list_->FindLast();
+  if (current_node_ == list_->header_) {
+    current_node_ = nullptr;
+  }
+}
+
+template <class Comparator>
+void SkipList<Comparator>::Iterator::SeekToFirst() {
+  current_node_ = list_->header_->Next(0);
+}
+
+template <class Comparator>
+void SkipList<Comparator>::Iterator::SeekTo(const char* key) {
+  current_node_ = list_->FindGreaterOrEqual(key, nullptr);
+}
+
+template <class Comparator>
+struct SkipList<Comparator>::Node {
+  explicit Node(const char* key) : key(key){};
+  void SetNext(int level, Node* node) { next[level] = node; }
+  Node* Next(int level) { return next[level]; }
+
+  const char* key;
 
  private:
   Node* next[0];
 };
 
-template <typename Key, class Comparator>
-typename SkipList<Key, Comparator>::Node* SkipList<Key, Comparator>::NewNode(
-    int level) {
-  char* mem = arena_->Allocate(sizeof(Node) + sizeof(Node*) * (level - 1));
+template <class Comparator>
+typename SkipList<Comparator>::Node* SkipList<Comparator>::NewNode(int height) {
+  char* mem = arena_->Allocate(sizeof(Node) + sizeof(Node*) * height);
   return new (mem) Node;
 }
 
-template <typename Key, class Comparator>
-SkipList<Key, Comparator>::SkipList(Comparator* comparator, Arena* arena)
+template <class Comparator>
+SkipList<Comparator>::SkipList(Comparator* comparator, Arena* arena)
     : comparator_(comparator),
       arena_(arena),
       max_height_(1),
@@ -68,55 +130,87 @@ SkipList<Key, Comparator>::SkipList(Comparator* comparator, Arena* arena)
   }
 }
 
-template <typename Key, class Comparator>
-bool SkipList<Key, Comparator>::Contains(const Key& key) {
+template <class Comparator>
+bool SkipList<Comparator>::Contains(const char* key) {
   Node* node = FindGreaterOrEqual(key, nullptr);
   return node && comparator_(node->key, key) == 0;
 }
 
-template <typename Key, class Comparator>
-bool SkipList<Key, Comparator>::KeyIsAfterNode(const Key& key, Node* node) {
-  return comparator_(key, node->key) > 0;
+template <class Comparator>
+bool SkipList<Comparator>::KeyIsAfterNode(const char* key, Node* node) {
+  return !node || comparator_(key, node->key) > 0;
 }
 
-template <typename Key, class Comparator>
-void SkipList<Key, Comparator>::Insert(const Key& key) {
+template <class Comparator>
+void SkipList<Comparator>::Insert(const char* key) {
   Node prev[kMaxHeight];
   Node* next = FindGreaterOrEqual(key, &prev);
   if (next && comparator_(next->key, key) == 0) {
+    // 重复 key
     return;
   }
   int h = GetRandomHeight();
   Node* new_node = NewNode(h);
+  // 如果新节点超高，则超出的部分前驱节点是header（此时是nullptr）
   if (max_height_ < h) {
-    for (int i = h; i > max_height_; i--) {
+    for (int i = h; i >= max_height_; i--) {
       prev[i - 1] = header_;
     }
     max_height_ = h;
   }
-  for (int i = 1; i <= h; i++) {
-    new_node->SetNext(i, prev[i - 1].Next(i));
-    prev[i - 1].SetNext(i, new_node);
+  // 每个前驱节点新的后驱节点需要更新
+  for (int i = 0; i < h; i++) {
+    new_node->SetNext(i, prev[i].Next(i));
+    prev[i].SetNext(i, new_node);
   }
 }
-
-template <typename Key, class Comparator>
-typename SkipList<Key, Comparator>::Node*
-SkipList<Key, Comparator>::FindGreaterOrEqual(const Key& key, Node** prev) {
+template <class Comparator>
+int SkipList<Comparator>::GetRandomHeight() {
+  auto r = Random(10);
+  int height = 1;
+  while (r.OneIn(4)) {
+    height++;
+    if (height == kMaxHeight) {
+      break;
+    }
+  }
+  return height;
+}
+template <class Comparator>
+typename SkipList<Comparator>::Node* SkipList<Comparator>::FindLast() const {
+  if (header_->Next(0) == nullptr) {
+    return header_;
+  }
   Node* n = header_;
-  int lev = max_height_;
-  // 在当前层查找next，如果next更大，往下一层（if）
-  // 如果next小，则往前走一步
+  int h = max_height_ - 1;
+  while (true) {
+    Node* next = n->Next(h);
+    if (next) {
+      continue;
+    }
+    if (h == 0) {
+      break;
+    }
+    h--;
+  }
+  return n;
+}
+
+template <class Comparator>
+typename SkipList<Comparator>::Node* SkipList<Comparator>::FindGreaterOrEqual(
+    const char* key, Node** prev) {
+  Node* n = header_;
+  int lev = max_height_ - 1;
   while (true) {
     Node* next = n->Next(lev);
     if (KeyIsAfterNode(key, next)) {
       n = next;
     } else {
       if (prev) {
-        prev[lev - 1] = n;
+        prev[lev] = n;
       }
       lev--;
-      if (lev == 0) {
+      if (lev == -1) {
         return next;
       }
     }

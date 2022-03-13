@@ -33,6 +33,7 @@ target_sources(donkeyleveldb
         "${LEVELDB_PUBLIC_INCLUDE_DIR}/status.h"
         "${LEVELDB_PUBLIC_INCLUDE_DIR}/db.h"
         "${LEVELDB_PUBLIC_INCLUDE_DIR}/comparator.h"
+        "${LEVELDB_PUBLIC_INCLUDE_DIR}/iterator.h"
         )
 
 # ctest
