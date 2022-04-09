@@ -53,3 +53,4 @@ endfunction(leveldb_test)
 
 leveldb_test("db/log_writer_test.cpp")
 leveldb_test("util/arena_test.cpp")
+leveldb_test("db/skiplist_test.cpp")

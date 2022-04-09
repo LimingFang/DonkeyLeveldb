@@ -10,10 +10,13 @@
 #include "db/db_format.h"
 #include "db/skiplist.h"
 #include "leveldb/status.h"
+#include "util/arena.h"
 
 namespace leveldb {
-
+class MemTableIterator;
 class MemTable {
+  friend class MemTableIterator;
+
  public:
   MemTable();
   MemTable(const MemTable&) = delete;
@@ -26,13 +29,14 @@ class MemTable {
 
  private:
   struct KeyComparator {
-    // wrap for InternalKey
+    // wrapper for InternalKey
     const InternalKeyComparator comparator;
     explicit KeyComparator(InternalKeyComparator c) : comparator(c) {}
     bool operator()(const char* a, const char* b);
   };
-  using Table = SkipList<const char*, KeyComparator>;
+  using Table = SkipList<KeyComparator>;
   Table* table_;
+  Arena* arena_;
 };
 
 }  // namespace leveldb

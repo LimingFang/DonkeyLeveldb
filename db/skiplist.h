@@ -6,7 +6,6 @@
 #define DONKEYLEVELDB_DB_SKIPLIST_H_
 
 #include "leveldb/slice.h"
-
 #include "util/arena.h"
 #include "util/random.h"
 
@@ -17,6 +16,7 @@ class SkipList {
   struct Node;
 
  public:
+  // Node->next[i]表示Node高度为(i+1)的 next 节点
   // 一些规定:高度值[1,kMaxHeight]
   SkipList(Comparator* comparator, Arena* arena);
 
@@ -48,17 +48,22 @@ class SkipList {
   };
 
  private:
+  // For Generating new node.
   int GetRandomHeight();
 
   Node* FindGreaterOrEqual(const char* key, Node** prev);
 
+  // For `Insert`.
   Node* NewNode(int height);
 
   // 返回最后一个节点，若为空则返回 header_
+  // For what?
   Node* FindLast() const;
 
+  // For finding correct node.
   bool KeyIsAfterNode(const char* key, Node* node);
 
+ private:
   Arena* arena_;
   Comparator* comparator_;
   int max_height_;
@@ -176,6 +181,7 @@ int SkipList<Comparator>::GetRandomHeight() {
   }
   return height;
 }
+
 template <class Comparator>
 typename SkipList<Comparator>::Node* SkipList<Comparator>::FindLast() const {
   if (header_->Next(0) == nullptr) {

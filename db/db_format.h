@@ -19,6 +19,11 @@ enum ValueType {
 //
 const ValueType kTypeForSeek = kTypeValue;
 
+inline Slice ExtractUserKey(const Slice& internal_key) {
+  return Slice(internal_key.data(),
+               internal_key.size() - sizeof(SequenceNumberType));
+}
+
 // 给定 user_key 和 seq_num，去 memtable 中查询
 // 对应的 record。
 class LookupKey {
@@ -32,7 +37,7 @@ class LookupKey {
   Slice user_key();
 
  private:
-  // key_lengh 第一个字节
+  // key_length 第一个字节
   char* start_;
   // key 第一个字节
   char* kstart_;

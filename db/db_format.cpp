@@ -4,32 +4,34 @@
 
 #include "db_format.h"
 
+#include "leveldb/slice.h"
 #include "util/coding.h"
+
 namespace leveldb {
 
 static uint64_t PackSeqnumberAndType(SequenceNumberType seq, ValueType type) {
   return (seq << 8 | type);
 }
 
-leveldb::InternalKeyComparator::InternalKeyComparator(Comparator* c)
+InternalKeyComparator::InternalKeyComparator(Comparator* c)
     : user_key_comparator_(c) {}
-int leveldb::InternalKeyComparator::Compare(const leveldb::Slice& l,
-                                            const leveldb::Slice& r) {
-  int result = user_key_comparator_->Compare(l, r);
+
+int InternalKeyComparator::Compare(const Slice& l, const Slice& r) {
+  // 优先比较 user_key，如果相等在比较 seq_num
+  // 小端，seq_num 在 tag 的低7字节，type 在最高的地址。
+  // [type | seq_num]
+  // record entry 更靠后 <=> user_key 大 || ((user_key 一致) && seq_num 更小)
+  // seq_num 更小 <=> 更旧
+  int result =
+      user_key_comparator_->Compare(ExtractUserKey(l), ExtractUserKey(r));
   if (result == 0) {
-    // 默认小端，seqnum 占据了低7个字节，seqnum 最高字节
-    // 存在地址最高处
-    // seqnum 更大的反而"更小"
-    int idx = l.size() - 1;
-    while (true) {
-      if (l[idx] > r[idx]) {
-        return -1;
-      } else if (l[idx] < r[idx]) {
-        return 1;
-      }
-      idx--;
+    auto l_tag = DecodeFixed64(l.data() + l.size() - 8);
+    auto r_tag = DecodeFixed64(r.data() + r.size() - 8);
+    if (l_tag > r_tag) {
+      return -1;
+    } else {
+      return 1;
     }
-    assert(false);
   }
   return result;
 }
