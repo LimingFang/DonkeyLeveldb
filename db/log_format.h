@@ -14,6 +14,8 @@ enum RecordType : uint8_t {
   kMidType = 6,
 
   kLastType = 8,
+
+  kMaxRecordType = 10,
 };
 
 static const int kBlockSize = 32 << 10;

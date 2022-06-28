@@ -3,6 +3,18 @@
 
 namespace leveldb {
 
+class SequentialFile {
+ public:
+  SequentialFile() = default;
+
+  SequentialFile(const SequentialFile&) = delete;
+  SequentialFile& operator=(const SequentialFile&) = delete;
+
+  virtual ~SequentialFile();
+
+  virtual Status Read(size_t n, Slice* slice, std::string* scratch) = 0;
+};
+
 class WritableFile {
  public:
   WritableFile() = default;
