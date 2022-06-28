@@ -6,6 +6,7 @@
 #define DONKEYLEVELDB_DB_SKIPLIST_H_
 
 #include "leveldb/slice.h"
+
 #include "util/arena.h"
 #include "util/random.h"
 
@@ -16,10 +17,12 @@ class SkipList {
   struct Node;
 
  public:
+  SkipList() = default;
   // Node->next[i]表示Node高度为(i+1)的 next 节点
   // 一些规定:高度值[1,kMaxHeight]
-  SkipList(Comparator* comparator, Arena* arena);
+  SkipList(Comparator comparator, Arena* arena);
 
+  // No duplicate key is allowed.
   void Insert(const char* key);
 
   bool Contains(const char* key);
@@ -51,21 +54,27 @@ class SkipList {
   // For Generating new node.
   int GetRandomHeight();
 
+  // comparator(a,b) <= 0 means nodeA isn't before nodeB.
+  // return NodeX which comparator(key,X) <= 0.
   Node* FindGreaterOrEqual(const char* key, Node** prev);
 
-  // For `Insert`.
-  Node* NewNode(int height);
+  // .
+  Node* NewNode(const char* key, int height);
 
   // 返回最后一个节点，若为空则返回 header_
   // For what?
   Node* FindLast() const;
 
-  // For finding correct node.
+  // Return true when comparator(key,node) > 0.
+  // For example, comparator = ">",即 skiplist 升序排列{1,3,5}.
+  // Keyisafternode(3,5) = false.
+  // Keyisafternode(4,3) = true.
+  // keyisafternode(6,nullptr) = false.
   bool KeyIsAfterNode(const char* key, Node* node);
 
  private:
   Arena* arena_;
-  Comparator* comparator_;
+  Comparator comparator_;
   int max_height_;
   Node* header_;
   static const int kMaxHeight = 12;
@@ -119,19 +128,20 @@ struct SkipList<Comparator>::Node {
 };
 
 template <class Comparator>
-typename SkipList<Comparator>::Node* SkipList<Comparator>::NewNode(int height) {
+typename SkipList<Comparator>::Node* SkipList<Comparator>::NewNode(
+    const char* key, int height) {
   char* mem = arena_->Allocate(sizeof(Node) + sizeof(Node*) * height);
-  return new (mem) Node;
+  return new (mem) Node(key);
 }
 
 template <class Comparator>
-SkipList<Comparator>::SkipList(Comparator* comparator, Arena* arena)
+SkipList<Comparator>::SkipList(Comparator comparator, Arena* arena)
     : comparator_(comparator),
       arena_(arena),
       max_height_(1),
-      header_(NewNode(kMaxHeight)) {
+      header_(NewNode(0, kMaxHeight)) {
   for (int i = 0; i < kMaxHeight; i++) {
-    header_[i] = nullptr;
+    header_->SetNext(i, nullptr);
   }
 }
 
@@ -148,14 +158,15 @@ bool SkipList<Comparator>::KeyIsAfterNode(const char* key, Node* node) {
 
 template <class Comparator>
 void SkipList<Comparator>::Insert(const char* key) {
-  Node prev[kMaxHeight];
-  Node* next = FindGreaterOrEqual(key, &prev);
-  if (next && comparator_(next->key, key) == 0) {
-    // 重复 key
-    return;
-  }
+  Node* prev[kMaxHeight];
+  // next >= key.
+  Node* next = FindGreaterOrEqual(key, prev);
+
+  // No duplicate key is allowed.
+  assert(!next || comparator_(next->key, key) == 0);
+
   int h = GetRandomHeight();
-  Node* new_node = NewNode(h);
+  Node* new_node = NewNode(key, h);
   // 如果新节点超高，则超出的部分前驱节点是header（此时是nullptr）
   if (max_height_ < h) {
     for (int i = h; i >= max_height_; i--) {
@@ -165,10 +176,11 @@ void SkipList<Comparator>::Insert(const char* key) {
   }
   // 每个前驱节点新的后驱节点需要更新
   for (int i = 0; i < h; i++) {
-    new_node->SetNext(i, prev[i].Next(i));
-    prev[i].SetNext(i, new_node);
+    new_node->SetNext(i, prev[i]->Next(i));
+    prev[i]->SetNext(i, new_node);
   }
 }
+
 template <class Comparator>
 int SkipList<Comparator>::GetRandomHeight() {
   auto r = Random(10);

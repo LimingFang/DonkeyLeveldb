@@ -16,7 +16,8 @@ enum ValueType {
   kTypeDeletion = 0x0,
   kTypeValue = 0x1,
 };
-//
+
+// TODO
 const ValueType kTypeForSeek = kTypeValue;
 
 inline Slice ExtractUserKey(const Slice& internal_key) {
@@ -30,11 +31,11 @@ class LookupKey {
  public:
   LookupKey(const Slice& user_key, SequenceNumberType seq_num);
 
-  Slice memtable_key();
+  Slice memtable_key() const;
 
-  Slice internal_key();
+  Slice internal_key() const;
 
-  Slice user_key();
+  Slice user_key() const;
 
  private:
   // key_length 第一个字节
@@ -53,6 +54,7 @@ class InternalKeyComparator : public Comparator {
   ~InternalKeyComparator() override = default;
   int Compare(const Slice& l, const Slice& r) override;
   const char* Name() override;
+  Comparator* user_comparator() const { return user_key_comparator_; }
 
  private:
   Comparator* user_key_comparator_;

@@ -39,4 +39,6 @@ char* EncodeVariant(char* c, uint64_t num) {
   return reinterpret_cast<char*>(ptr + 1);
 }
 
+const char* GetVariant32Ptr(const char* p, const char* limit, uint32_t* length);
+
 }  // namespace leveldb

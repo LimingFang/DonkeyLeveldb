@@ -5,6 +5,7 @@
 #include "db_format.h"
 
 #include "leveldb/slice.h"
+
 #include "util/coding.h"
 
 namespace leveldb {
@@ -55,8 +56,8 @@ LookupKey::LookupKey(const Slice& user_key, SequenceNumberType seq_num) {
   // tag
   end_ = EncodeFixed64(end_, PackSeqnumberAndType(seq_num, kTypeForSeek));
 }
-Slice LookupKey::memtable_key() { return Slice(start_, end_ - start_); }
-Slice LookupKey::internal_key() { return Slice(kstart_, end_ - kstart_); }
-Slice LookupKey::user_key() { return Slice(kstart_, end_ - kstart_ - 8); }
+Slice LookupKey::memtable_key() const { return Slice(start_, end_ - start_); }
+Slice LookupKey::internal_key() const { return Slice(kstart_, end_ - kstart_); }
+Slice LookupKey::user_key() const { return Slice(kstart_, end_ - kstart_ - 8); }
 
 }  // namespace leveldb
