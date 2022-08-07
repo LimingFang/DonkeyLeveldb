@@ -14,26 +14,14 @@ include_directories(
 add_library(donkeyleveldb "")
 target_sources(donkeyleveldb
         PRIVATE
-        "db/skiplist.h"
-        "db/memtable.h"
         "db/memtable.cpp"
-        "db/db_format.h"
         "db/db_format.cpp"
         "db/log_writer.cpp"
-        "db/db_impl.h"
         "db/db_impl.cpp"
         "util/env.cpp"
         "util/comparator.cpp"
-        "util/arena.h"
         "util/arena.cpp"
-        "util/random.h"
-        PUBLIC
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/env.h"
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/slice.h"
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/status.h"
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/db.h"
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/comparator.h"
-        "${LEVELDB_PUBLIC_INCLUDE_DIR}/iterator.h"
+        "table/merger.cpp"
         )
 
 # ctest
