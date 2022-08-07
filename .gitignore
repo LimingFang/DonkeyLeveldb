@@ -6,3 +6,4 @@ third_party/
 cmake-build-debug/
 Testing/
 .idea/
+.DS_Store
