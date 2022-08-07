@@ -22,6 +22,7 @@ target_sources(donkeyleveldb
         "util/comparator.cpp"
         "util/arena.cpp"
         "table/merger.cpp"
+        "table/two_level_iterator.cpp"
         )
 
 # ctest
