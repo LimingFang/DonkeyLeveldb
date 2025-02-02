@@ -14,20 +14,18 @@ include_directories(
 add_library(donkeyleveldb "")
 target_sources(donkeyleveldb
         PRIVATE
-        "db/memtable.cpp"
-        "db/db_format.cpp"
-        "db/log_writer.cpp"
-        "db/db_impl.cpp"
         "util/env.cpp"
         "util/comparator.cpp"
         "util/arena.cpp"
-        "table/merger.cpp"
-        "table/two_level_iterator.cpp"
+        "util/logger.cpp"
+        "util/status.cpp"
         )
 
 # ctest
 enable_testing()
 add_subdirectory("third_party/googletest")
+# NOTE(fangliming.xxm): can't use gmock if comment out following line.
+include_directories("third_party/googletest/googlemock/include")
 # 定义一个function方便添加测试文件
 function(leveldb_test test_file)
     get_filename_component(test_target_name "${test_file}" NAME_WE)
@@ -40,6 +38,7 @@ function(leveldb_test test_file)
     add_test(NAME "${test_target_name}" COMMAND "${test_target_name}")
 endfunction(leveldb_test)
 
-leveldb_test("db/log_writer_test.cpp")
+leveldb_test("util/env_posix_test.cpp")
+# leveldb_test("db/log_writer_test.cpp")
 leveldb_test("util/arena_test.cpp")
 leveldb_test("db/skiplist_test.cpp")

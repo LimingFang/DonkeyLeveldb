@@ -2,8 +2,7 @@
 
 #include <algorithm>
 #include <string>
-
-#include "leveldb/slice.h"
+#include <string_view>
 
 namespace leveldb {
 
@@ -23,19 +22,24 @@ class Status {
   static Status OK() { return Status(); }
 
   // Return error status of an appropriate type.
-  static Status NotFound(const Slice& msg, const Slice& msg2 = Slice()) {
+  static Status NotFound(std::string_view msg,
+                         std::string_view msg2 = std::string_view()) {
     return Status(kNotFound, msg, msg2);
   }
-  static Status Corruption(const Slice& msg, const Slice& msg2 = Slice()) {
+  static Status Corruption(std::string_view msg,
+                           std::string_view msg2 = std::string_view()) {
     return Status(kCorruption, msg, msg2);
   }
-  static Status NotSupported(const Slice& msg, const Slice& msg2 = Slice()) {
+  static Status NotSupported(std::string_view msg,
+                             std::string_view msg2 = std::string_view()) {
     return Status(kNotSupported, msg, msg2);
   }
-  static Status InvalidArgument(const Slice& msg, const Slice& msg2 = Slice()) {
+  static Status InvalidArgument(std::string_view msg,
+                                std::string_view msg2 = std::string_view()) {
     return Status(kInvalidArgument, msg, msg2);
   }
-  static Status IOError(const Slice& msg, const Slice& msg2 = Slice()) {
+  static Status IOError(std::string_view msg,
+                        std::string_view msg2 = std::string_view()) {
     return Status(kIOError, msg, msg2);
   }
 
@@ -75,7 +79,7 @@ class Status {
     return (state_ == nullptr) ? kOk : static_cast<Code>(state_[4]);
   }
 
-  Status(Code code, const Slice& msg, const Slice& msg2);
+  Status(Code code, std::string_view msg, std::string_view msg2);
   static const char* CopyState(const char* s);
 
   // OK status has a null state_.  Otherwise, state_ is a new[] array

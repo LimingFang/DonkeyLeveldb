@@ -1,10 +1,5 @@
-//
-// Created by 方里明 on 3/1/22.
-//
-
-#ifndef DONKEYLEVELDB_INCLUDE_LEVELDB_COMPARATOR_H_
-#define DONKEYLEVELDB_INCLUDE_LEVELDB_COMPARATOR_H_
-#include "leveldb/slice.h"
+#pragma once
+#include <string_view>
 
 namespace leveldb {
 class Comparator {
@@ -12,10 +7,8 @@ class Comparator {
   Comparator() = default;
   virtual ~Comparator() = 0;
 
-  virtual int Compare(const Slice& l, const Slice& r) = 0;
+  virtual int Compare(std::string_view l, std::string_view r) = 0;
 
   virtual const char* Name() = 0;
 };
 }  // namespace leveldb
-
-#endif  // DONKEYLEVELDB_INCLUDE_LEVELDB_COMPARATOR_H_

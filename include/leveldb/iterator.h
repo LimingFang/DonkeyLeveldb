@@ -2,9 +2,8 @@
 // Created by 方里明 on 3/13/22.
 //
 
-#ifndef DONKEYLEVELDB_INCLUDE_LEVELDB_ITERATOR_H_
-#define DONKEYLEVELDB_INCLUDE_LEVELDB_ITERATOR_H_
-#include "leveldb/slice.h"
+#pragma once
+#include <string_view>
 #include "leveldb/status.h"
 
 namespace leveldb {
@@ -24,17 +23,16 @@ class Iterator {
 
   virtual void Prev() = 0;
 
-  virtual Slice key() const = 0;
+  virtual std::string_view key() const = 0;
 
-  virtual Slice value() const = 0;
+  virtual std::string_view value() const = 0;
 
   virtual void SeekToLast() = 0;
 
   virtual void SeekToFirst() = 0;
 
-  virtual void Seek(const Slice& slice) = 0;
+  virtual void Seek(const std::string_view& slice) = 0;
 
   virtual Status status() const = 0;
 };
 }  // namespace leveldb
-#endif  // DONKEYLEVELDB_INCLUDE_LEVELDB_ITERATOR_H_

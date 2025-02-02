@@ -2,10 +2,10 @@
 // Created by 方里明 on 3/1/22.
 //
 
-#ifndef DONKEYLEVELDB_DB_SKIPLIST_H_
-#define DONKEYLEVELDB_DB_SKIPLIST_H_
+#pragma once
 
-#include "leveldb/slice.h"
+#include <cassert>
+#include <string_view>
 
 #include "util/arena.h"
 #include "util/random.h"
@@ -30,13 +30,13 @@ class SkipList {
   class Iterator {
    public:
     explicit Iterator(SkipList* skip_list)
-        : current_node_(skip_list->header_), list_(skip_list){};
+        : current_node_(skip_list->header_), list_(skip_list) {};
 
     bool Valid() const;
 
     void Next();
 
-    Slice Value() const;
+    std::string_view Value() const;
 
     void SeekToLast();
 
@@ -92,7 +92,7 @@ void SkipList<Comparator>::Iterator::Next() {
 }
 
 template <class Comparator>
-Slice SkipList<Comparator>::Iterator::Value() const {
+std::string_view SkipList<Comparator>::Iterator::Value() const {
   assert(current_node_ != nullptr);
   return Slice(current_node_->key);
 }
@@ -117,7 +117,7 @@ void SkipList<Comparator>::Iterator::SeekTo(const char* key) {
 
 template <class Comparator>
 struct SkipList<Comparator>::Node {
-  explicit Node(const char* key) : key(key){};
+  explicit Node(const char* key) : key(key) {};
   void SetNext(int level, Node* node) { next[level] = node; }
   Node* Next(int level) { return next[level]; }
 
@@ -236,5 +236,3 @@ typename SkipList<Comparator>::Node* SkipList<Comparator>::FindGreaterOrEqual(
 }
 
 }  // namespace leveldb
-
-#endif  // DONKEYLEVELDB_DB_SKIPLIST_H_

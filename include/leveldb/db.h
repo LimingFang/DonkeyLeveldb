@@ -5,8 +5,8 @@
 #ifndef DONKEYLEVELDB_INCLUDE_LEVELDB_DB_H_
 #define DONKEYLEVELDB_INCLUDE_LEVELDB_DB_H_
 #include <string>
+#include <string_view>
 
-#include "leveldb/slice.h"
 #include "leveldb/status.h"
 
 namespace leveldb {
@@ -25,11 +25,11 @@ class DB {
   DB& operator=(const DB&) = delete;
   virtual ~DB();
 
-  virtual Status Put(const Slice& key, const Slice& value) = 0;
+  virtual Status Put(std::string_view key, std::string_view value) = 0;
 
-  virtual Status Get(const Slice& key, std::string* value) = 0;
+  virtual Status Get(std::string_view key, std::string* value) = 0;
 
-  virtual Status Delete(const Slice& key) = 0;
+  virtual Status Delete(std::string_view key) = 0;
 };
 
 }  // namespace leveldb

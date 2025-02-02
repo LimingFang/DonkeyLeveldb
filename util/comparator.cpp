@@ -11,12 +11,12 @@ class BytewiseComparator : public Comparator {
  public:
   BytewiseComparator() = default;
   ~BytewiseComparator() override = default;
-  int Compare(const Slice& l, const Slice& r) override;
+  int Compare(std::string_view l, std::string_view r) override;
   const char* Name() override;
 };
 
 // 字典序
-int BytewiseComparator::Compare(const Slice& l, const Slice& r) {
+int BytewiseComparator::Compare(std::string_view l, std::string_view r) {
   return l.compare(r);
 }
 const char* BytewiseComparator::Name() { return "BytewiseComparator"; }
